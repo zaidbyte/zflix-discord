@@ -6,7 +6,7 @@ you DM it. Conversation context is built by walking up the Discord reply chain.
 
 ## How it works
 
-- `bot.py` — main bot (uses `discord.py` + `groq`).
+- `main.py` — main bot (uses `discord.py` + `groq`).
 - `site_context.md` — what the bot knows about your site. **Edit this** before
   shipping; it's injected into the AI's system prompt at startup.
 - `requirements.txt` — Python deps.
@@ -20,7 +20,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 # Fill in DISCORD_TOKEN and GROQ_API_KEY in .env
-python bot.py
+python main.py
 ```
 
 ## Discord setup
@@ -45,19 +45,18 @@ you hit rate limits — `llama-3.1-8b-instant` is faster/cheaper.
 ## Deploy on Wispbyte
 
 1. Create a new **Python Generic** server in your Wispbyte panel.
-2. Upload all the files from this repo via the file manager or SFTP.
-3. In **Startup**, set the start command to:
+2. In the file manager (or SFTP), pull this repo into the server. From the
+   console: `git clone https://github.com/zaidbyte/zflix-discord.git .`
+   (the default startup command will `git pull` on each restart).
+3. Create a `.env` file in the server root with:
    ```
-   python bot.py
+   DISCORD_TOKEN=your_discord_bot_token
+   GROQ_API_KEY=your_groq_api_key
    ```
-   And add environment variables `DISCORD_TOKEN` and `GROQ_API_KEY` (and optionally
-   `GROQ_MODEL`). Wispbyte's panel has an Environment section for these — you don't
-   need a `.env` file on the server if you set them there.
-4. In the **Console**, run once to install deps:
-   ```
-   pip install --user -r requirements.txt
-   ```
-5. Start the server. Check console output for `Logged in as ...`.
+   The bot loads these via `python-dotenv` at startup.
+4. The default Python Generic startup runs `main.py` and auto-installs
+   `requirements.txt` — no changes needed. Just start the server.
+5. Check the console for `Logged in as ...`.
 
 ## Usage
 
