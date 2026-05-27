@@ -19,6 +19,10 @@ MAX_TOKENS = int(os.environ.get("MAX_TOKENS", "1024"))
 TEMPERATURE = float(os.environ.get("TEMPERATURE", "0.5"))
 DISCORD_MSG_LIMIT = 1900
 
+ALLOWED_GUILD_IDS: set[int] = {
+    int(x) for x in os.environ.get("ALLOWED_GUILD_IDS", "").split(",") if x.strip()
+}
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
@@ -102,6 +106,12 @@ def should_respond(message: Message) -> bool:
     if message.author.bot or client.user is None:
         return False
 
+    if ALLOWED_GUILD_IDS:
+        if message.guild is None or message.guild.id not in ALLOWED_GUILD_IDS:
+            return False
+    elif isinstance(message.channel, discord.DMChannel):
+        return True
+
     if client.user.mentioned_in(message) and not message.mention_everyone:
         return True
 
@@ -109,9 +119,6 @@ def should_respond(message: Message) -> bool:
     if ref and isinstance(ref.resolved, Message):
         if ref.resolved.author.id == client.user.id:
             return True
-
-    if isinstance(message.channel, discord.DMChannel):
-        return True
 
     return False
 
@@ -152,6 +159,10 @@ async def on_ready() -> None:
     log.info("Logged in as %s (id=%s)", user, user.id if user else "?")
     log.info("Using model: %s", GROQ_MODEL)
     log.info("Site context bytes: %d", len(SITE_CONTEXT))
+    if ALLOWED_GUILD_IDS:
+        log.info("Restricted to guild ids: %s", sorted(ALLOWED_GUILD_IDS))
+    else:
+        log.info("No guild restriction (responds in all servers and DMs)")
 
 
 @client.event
